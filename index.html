@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Perjalanan Kita</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #fff0f6;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.8em;
+            color: rgba(0, 0, 0, 0.5); 
+            pointer-events: none;
+}
+
+
+        .hearts {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff69b4;
+            transform: rotate(45deg);
+            animation: float 5s infinite ease-in;
+        }
+
+        .heart::before, .heart::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff69b4;
+            border-radius: 50%;
+        }
+
+        .heart::before { top: -10px; left: 0; }
+        .heart::after { left: 10px; top: 0; }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(45deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(45deg); opacity: 0; }
+        }
+
+        .polaroid {
+            display: inline-block;
+            padding: 10px;
+            background-color: #ffffff;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #ddd;
+            margin: 20px;
+            max-width: 300px;
+            text-align: center;
+            font-size: 1em;
+            position: relative; 
+        }
+
+        .polaroid img {
+            width: 100%;
+            height: auto;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .caption {
+            padding: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        #openGift, #showStoryButton, #nextStoryButton, #yesButton, #noButton {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #ff69b4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.1s, box-shadow 0.3s;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.5);
+        }
+
+        #storyContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #birthdayMessage, #apologyMessage {
+            display: none;
+            animation: fadeIn 2s ease forwards;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        #questionContainer {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+
+        #showStoryButton {
+            display: none;
+        }
+
+        #nextStoryButton {
+            position: absolute;
+            top: 10px; 
+            right: 10px; 
+            z-index: 1; 
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">MADE WITH LOVE FROM NUZ</div>
+
+    <div id="apologyMessage">Maaf aku blom bisa ketemu ya aku harap apa yang kubikin ini bisa jadi pengganti yang manis buat kamu...</div>
+    <div id="birthdayMessage">Selamat Ulang Tahun<br><br>KIA<br><br></div>
+    
+
+    <button id="openGift" onclick="revealMessage()">Buka</button>
+
+    <div id="storyContainer"></div>
+
+    <div id="questionContainer">
+        <div id="questionText"></div>
+        <button id="yesButton" onclick="nextQuestion()">Ya</button>
+        <button id="noButton" onclick="avoidNo()">Tidak</button>
+    </div>
+
+    <button id="showStoryButton" onclick="showNextStory()">Lihat Cerita</button>
+    <button id="nextStoryButton" style="display: none;" onclick="showNextStory()">>>></button>
+
+    <div class="hearts"></div>
+
+    <script>
+        const stories = [
+            "Pas bocil aku player fortnite dari 2019 yg gak sengaja ketemu cewe stranger disitu",
+            "Start from 2020 kita sering mabar, nyaman, dan 2021 puncaknya beneran meet di real life for the first time yg abis itu gelud satu tahun",
+            "Ga expect bisa dapetin dia di tahun 2022 yang sampe sekarang 2024 tepat ultahnya 30 oktober masih awet"
+        ];
+
+        const images = [
+            "image1.jpg",
+            "image2.jpg",
+            "image3.jpg"
+        ];
+
+        let currentStoryIndex = 0;
+        let questionIndex = 0;
+        let alertCount = 0;
+
+        function revealMessage() {
+            document.getElementById("apologyMessage").style.display = "block";
+            document.getElementById("birthdayMessage").style.display = "block";
+            document.getElementById("openGift").style.display = "none";
+
+            setTimeout(() => {
+                fadeOutMessages();
+            }, 3000); 
+        }
+
+        function fadeOutMessages() {
+            const apologyMessage = document.getElementById("apologyMessage");
+            const birthdayMessage = document.getElementById("birthdayMessage");
+
+            apologyMessage.style.animation = "fadeOut 2s ease forwards";
+            birthdayMessage.style.animation = "fadeOut 2s ease forwards";
+
+            setTimeout(() => {
+                apologyMessage.style.display = "none";
+                birthdayMessage.style.display = "none";
+                startQuestions();
+            }, 2000); 
+        }
+
+        function startQuestions() {
+            document.getElementById("questionContainer").style.display = "block";
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            const questions = [
+                "masih inget semua yang pernah kita laluin?",
+                "masi mau sama aku?",
+                "yang bener cuy",
+                "kamu sayang sm aku?",
+                "aku tau kamu pasti jawab ya :)"
+            ];
+
+            if (questionIndex < questions.length) {
+                document.getElementById("questionText").innerText = questions[questionIndex];
+                questionIndex++;
+            } else {
+                document.getElementById("questionContainer").style.display = "none";
+                document.getElementById("showStoryButton").style.display = "inline-block";
+            }
+        }
+
+        function avoidNo() {
+            const noButton = document.getElementById("noButton");
+            noButton.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px)`;
+        }
+
+        function showNextStory() {
+            if (alertCount < 3) {
+                alert("cieee");
+                alertCount++;
+            }
+
+            if (currentStoryIndex < stories.length) {
+                const storyContainer = document.getElementById("storyContainer");
+
+                const polaroid = document.createElement("div");
+                polaroid.className = "polaroid";
+
+                const img = document.createElement("img");
+                img.src = images[currentStoryIndex];
+                img.alt = "Memory Image " + (currentStoryIndex + 1);
+
+                const caption = document.createElement("div");
+                caption.className = "caption";
+                caption.innerText = stories[currentStoryIndex];
+
+                polaroid.appendChild(img);
+                polaroid.appendChild(caption);
+                storyContainer.appendChild(polaroid);
+
+                currentStoryIndex++;
+                document.getElementById("nextStoryButton").style.display = "inline-block"; 
+                document.getElementById("showStoryButton").style.display = "none"; 
+            } else {
+                alert("HBD YAAA!!! Semoga panjang umur sehat selalu pokoknya apapun yang terbaik aku selalu doain buat kamu. lopyu <3");
+                document.getElementById("nextStoryButton").style.display = "none"; 
+            }
+        }
+
+        for (let i = 0; i < 30; i++) {
+            let heart = document.createElement("div");
+            heart.className = "heart";
+            heart.style.left = Math.random() * 100 + "vw";
+            heart.style.animationDuration = Math.random() * 5 + 3 + "s"; 
+            heart.style.opacity = Math.random();
+            document.querySelector(".hearts").appendChild(heart);
+        }
+    </script>
+</body>
+</html>
